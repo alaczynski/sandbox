@@ -1,3 +1,4 @@
 rootProject.name = 'sandbox-config'
 include 'config-hocon'
+include 'spock'
 
