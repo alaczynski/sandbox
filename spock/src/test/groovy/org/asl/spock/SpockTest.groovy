@@ -7,12 +7,12 @@ class SpockTest extends Specification {
     /******************************************************************************************************************/
     def 'shortest - one block - setup'() {
         setup:
-        new ArrayList<>();
+        new ArrayList<>()
     }
 
     def 'shortest - one block - given, alias for setup'() {
         given:
-        new ArrayList<>();
+        new ArrayList<>()
     }
 
     def 'shortest - one block - expect'() {
