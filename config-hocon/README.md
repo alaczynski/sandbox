@@ -6,4 +6,5 @@
 
 # Glossary
 * JSON  (JavaScript             Object Notation)
+    * http://www.w3schools.com/json/
 * HOCON (Human-Optimized Config Object Notation)
