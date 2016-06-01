@@ -1,13 +1,13 @@
 package org.asl.hocon
 
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigValue
 import spock.lang.Specification
 
-import static com.typesafe.config.ConfigFactory.parseResources
 import static com.typesafe.config.ConfigFactory.parseString
 
 class HoconFeatureTest extends Specification {
 
-    /******************************************************************************************************************/
     def 'json vs hocon'() {
         when:
         def configFromJson = parseString('''
@@ -33,7 +33,6 @@ class HoconFeatureTest extends Specification {
         configFromJson == configFromHocon
     }
 
-    /******************************************************************************************************************/
     def 'substitution'() {
         when:
         def config = parseString('''
@@ -47,7 +46,6 @@ class HoconFeatureTest extends Specification {
         config.getString('bar.timeout') == '10ms'
     }
 
-    /******************************************************************************************************************/
     def 'duplicate - object values - merge'() {
         when:
         def config = parseString('''
@@ -84,7 +82,6 @@ class HoconFeatureTest extends Specification {
         config.getIntList('array') == [3, 4, 5]
     }
 
-    /******************************************************************************************************************/
     def 'concatenation - simple values - concatenated to string'() {
         when:
         def config = parseString('''
@@ -119,7 +116,6 @@ class HoconFeatureTest extends Specification {
         config.getInt('specific.c') == 4
     }
 
-    /******************************************************************************************************************/
     def 'substitution + merging = inheritance'() {
         when:
         def config = parseString('''
@@ -139,24 +135,22 @@ class HoconFeatureTest extends Specification {
         config == configShortWithConcatenation
     }
 
-    /******************************************************************************************************************/
     def 'fallback - handles like duplicates'() {
         when:
         def firstConfig = parseString('''
-        foo = { a = 1, c = 2 }
+        foo = { a = 1, b = 2 }
         ''')
         def secondConfig = parseString('''
-        foo = { b = 3, c = 4 }
+        foo = { b = 22, c = 3 }
         ''')
         def config = firstConfig.withFallback(secondConfig)
 
         then:
         config.getInt('foo.a') == 1
-        config.getInt('foo.b') == 3
-        config.getInt('foo.c') == 2
+        config.getInt('foo.b') == 2
+        config.getInt('foo.c') == 3
     }
 
-    /******************************************************************************************************************/
     def 'fallback - circular dependency'() {
         when:
         def firstConfig = parseString('''
@@ -181,15 +175,62 @@ class HoconFeatureTest extends Specification {
         config == configWithDifferentOrder
     }
 
-    /******************************************************************************************************************/
-    def 'file - merge many files'() {
+
+    def 'properties - config to properties'() {
         when:
-        def generic = parseResources('merge-generic.conf')
-        def specific = parseResources('merge-specific.conf')
-        def merged = specific.withFallback(generic).resolve()
+        def config = parseString('''
+        a {
+           b1 {
+               c = C
+           }
+           b2 = B2
+        }
+        ''')
+        def configAsMap = configToMap(config)
 
         then:
-        merged.getInt('object.a') == 11
-        merged.getInt('object.b') == 2
+        configAsMap == [
+                'a.b1.c': 'C',
+                'a.b2': 'B2']
+    }
+
+    private static Map<String, Object> configToMap(Config config) {
+        config.entrySet().collectEntries { Map.Entry<String, ConfigValue> entry ->
+            [entry.key, entry.value.unwrapped()]
+        } as Map
+    }
+
+    def 'nested config'() {
+        when:
+        def config = parseString('''
+        a {
+           b {
+               c1 = C1
+               c2 = C2
+           }
+        }
+        ''')
+        def nestedConfig = config.getConfig('a.b')
+
+        then:
+        nestedConfig.getString('c1') == 'C1'
+        nestedConfig.getString('c2') == 'C2'
+    }
+
+    def 'keys as holder for values'() {
+        when:
+        def config = parseString('''
+        com.sandbox {
+           Object1 {
+               property1 = 1
+           }
+           Object2 {
+           }
+        }
+        ''')
+
+        then:
+        Map<String, Object> map = config.getValue('com.sandbox').unwrapped() as Map
+        map.keySet() == ['Object1', 'Object2'] as Set
     }
 }
