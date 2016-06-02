@@ -220,17 +220,19 @@ class HoconFeatureTest extends Specification {
     def 'keys as holder for values'() {
         when:
         def config = parseString('''
-        com.sandbox {
-           Object1 {
+        classes {
+           "com.sandbox.Object1" {
                property1 = 1
            }
-           Object2 {
+           "com.sandbox.Object2" {
+           }
+           Object3 {
            }
         }
         ''')
 
         then:
-        Map<String, Object> map = config.getValue('com.sandbox').unwrapped() as Map
-        map.keySet() == ['Object1', 'Object2'] as Set
+        Map<String, Object> map = config.getValue('classes').unwrapped() as Map
+        map.keySet() == ['com.sandbox.Object1', 'com.sandbox.Object2', 'Object3'] as Set
     }
 }
