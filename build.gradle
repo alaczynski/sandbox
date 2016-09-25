@@ -3,9 +3,8 @@ version '1.0-SNAPSHOT'
 
 subprojects {
     apply plugin: 'java'
-    apply plugin: 'groovy'
 
-    sourceCompatibility = 1.7
+    sourceCompatibility = 1.8
 
     repositories {
         mavenCentral()

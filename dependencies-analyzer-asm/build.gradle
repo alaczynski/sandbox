@@ -1,0 +1,6 @@
+dependencies {
+    compile 'org.ow2.asm:asm-all:5.1'
+
+    testCompile 'junit:junit:4.9'
+    testCompile 'org.assertj:assertj-core:1.6.1'
+}
