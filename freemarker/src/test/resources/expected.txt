@@ -1,0 +1,8 @@
+monitors = "a b"
+
+[monitor:///path/a]
+blacklist = blacklist-a
+host = host-a
+
+[monitor:///path/b]
+host = host-b

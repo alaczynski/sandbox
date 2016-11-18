@@ -6,4 +6,5 @@ include 'dependencies-analyzer-asm'
 include 'ascii-table'
 include 'xstream'
 include 'java-logging'
+include 'freemarker'
 
