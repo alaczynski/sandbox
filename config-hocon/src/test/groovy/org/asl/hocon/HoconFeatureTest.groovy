@@ -2,11 +2,15 @@ package org.asl.hocon
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigValue
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 import static com.typesafe.config.ConfigFactory.parseString
 
 class HoconFeatureTest extends Specification {
+
+    @Rule TemporaryFolder temporaryFolder = new TemporaryFolder()
 
     def 'json vs hocon'() {
         when:
@@ -33,6 +37,9 @@ class HoconFeatureTest extends Specification {
         configFromJson == configFromHocon
     }
 
+    /*
+    Substitutions are a way of referring to other parts of the configuration tree.
+     */
     def 'substitution'() {
         when:
         def config = parseString('''
@@ -90,6 +97,19 @@ class HoconFeatureTest extends Specification {
 
         then:
         config.getString('value') == 'a b c'
+    }
+
+    def 'concatenation - simple values - with substitution'() {
+        when:
+        def config = parseString('''
+        some-string = a
+        concatenated-string = A${some-string}A
+        concatenated-string-with-forbidden-characters = ":::"${some-string}":::"
+        ''').resolve()
+
+        then:
+        config.getString('concatenated-string') == 'AaA'
+        config.getString('concatenated-string-with-forbidden-characters') == ':::a:::'
     }
 
     def 'concatenation - array values - concatenated to new array'() {
@@ -234,5 +254,33 @@ class HoconFeatureTest extends Specification {
         then:
         Map<String, Object> map = config.getValue('classes').unwrapped() as Map
         map.keySet() == ['com.sandbox.Object1', 'com.sandbox.Object2', 'Object3'] as Set
+    }
+
+    /*
+    include feature merges root object in another file into current object,
+    so foo { include "bar.json" } merges keys in bar.json into the object foo
+     */
+    def 'include file'() {
+        given:
+        def configOneFile = temporaryFolder.newFile('one.conf')
+        configOneFile << '''
+        one {
+            a = 1
+            b = ${two.a}
+        }
+        '''
+        def configOnePath = configOneFile.path.replace('\\', '/')
+
+        when:
+        def configTwo = parseString("""
+        include file("$configOnePath")
+
+        two.a = 2
+        """).resolve()
+
+        then:
+        configTwo.getInt('one.a') == 1
+        configTwo.getInt('one.b') == 2
+        configTwo.getInt('two.a') == 2
     }
 }
