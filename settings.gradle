@@ -7,4 +7,3 @@ include 'ascii-table'
 include 'xstream'
 include 'java-logging'
 include 'freemarker'
-
