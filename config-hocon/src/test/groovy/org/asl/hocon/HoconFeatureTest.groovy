@@ -1,6 +1,7 @@
 package org.asl.hocon
 
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValue
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
@@ -40,6 +41,7 @@ class HoconFeatureTest extends Specification {
     /*
     Substitutions are a way of referring to other parts of the configuration tree.
      */
+
     def 'substitution'() {
         when:
         def config = parseString('''
@@ -51,6 +53,20 @@ class HoconFeatureTest extends Specification {
         then:
         config.getString('foo.timeout') == '10ms'
         config.getString('bar.timeout') == '10ms'
+    }
+
+    def 'substitution - resolve method must be invoked before accessing config'() {
+        given:
+        def config = parseString('''
+        a = 1
+        b = ${a}
+        ''')
+
+        when:
+        config.getInt('b')
+
+        then:
+        thrown(ConfigException.NotResolved)
     }
 
     def 'duplicate - object values - merge'() {
@@ -260,6 +276,7 @@ class HoconFeatureTest extends Specification {
     include feature merges root object in another file into current object,
     so foo { include "bar.json" } merges keys in bar.json into the object foo
      */
+
     def 'include file'() {
         given:
         def configOneFile = temporaryFolder.newFile('one.conf')
